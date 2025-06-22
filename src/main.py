@@ -1,7 +1,8 @@
 from fastapi import FastAPI,status,Response,HTTPException,Depends
 from pydantic import BaseModel
+from typing import List
 from random import randrange
-from . import model
+from . import model,schemas
 from .database import get_session,engine
 from sqlmodel import SQLModel,Session,select,update
 
@@ -10,10 +11,6 @@ app = FastAPI()
 # Create the database tables
 SQLModel.metadata.create_all(engine)
 # Pydantic model for Post
-class Post(BaseModel):
-    title: str
-    content: str
-    published: bool = True
 
 # Root endpoint
 @app.get("/")
@@ -24,25 +21,25 @@ def test_sqlmodel(db: Session = Depends(get_session)):
     post = db.exec(select(model.Post)).all()
     return {"message": post}
 # Getting all posts
-@app.get("/posts")
+@app.get("/posts",response_model = List[schemas.PostResponse])
 def get_posts(db: Session = Depends(get_session)):
     posts = db.exec(select(model.Post)).all()
-    return {"data": posts}
+    return posts
 # Getting a single post by id
-@app.get("/posts/{id}")
+@app.get("/posts/{id}",response_model=schemas.PostResponse)
 def get_post(id: int, db: Session = Depends(get_session)):
     post = db.get(model.Post, id)
     if post:
-        return {"data": post}
+        return post
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id {id} does not exist")
 # Creating a new post 
-@app.post("/post", status_code=status.HTTP_201_CREATED)
-def create_post(post: Post,db: Session = Depends(get_session)):
+@app.post("/post", status_code=status.HTTP_201_CREATED,response_model=schemas.PostResponse)
+def create_post(post: schemas.PostCreate,db: Session = Depends(get_session)):
     new_post = model.Post(**post.model_dump())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
-    return {"data": new_post}
+    return new_post
 # Deleting a post by id
 @app.delete("/posts/{id}",status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int,db: Session = Depends(get_session)):
@@ -53,8 +50,8 @@ def delete_post(id: int,db: Session = Depends(get_session)):
     db.commit()
     return {"message": f"Post with id {id} deleted successfully"}
 # Updating a post by id
-@app.put("/posts/{id}")
-def update_post(id: int, post: Post,db: Session = Depends(get_session)):
+@app.put("/posts/{id}",response_model=schemas.PostResponse)
+def update_post(id: int, post: schemas.PostUpdate,db: Session = Depends(get_session),response_model=schemas.PostResponse):
     upd_post = db.get(model.Post, id)
     if upd_post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id {id} does not exist")
@@ -63,5 +60,5 @@ def update_post(id: int, post: Post,db: Session = Depends(get_session)):
     db.add(upd_post)
     db.commit()
     db.refresh(upd_post)    
-    return {"message": f"Post with id {id} updated successfully", "data": upd_post}
+    return upd_post
     
