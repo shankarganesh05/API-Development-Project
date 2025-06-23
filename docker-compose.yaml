@@ -3,6 +3,8 @@ services:
     image: postgres
     environment:
       POSTGRES_PASSWORD: postgres
+    volumes:
+      - /Users/shankar/repos/postgres-data :/var/lib/postgresql/data
     ports:
       - "5432:5432"
   pgadmin:
