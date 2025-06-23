@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,EmailStr
 
 
 class Post(BaseModel):
@@ -18,5 +18,13 @@ class PostResponse(Post):
     content: str
     published: bool
     id : int
+    class Config:
+        from_attributes = True
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+class UserResponse(BaseModel):
+    email: EmailStr
+    id: int
     class Config:
         from_attributes = True

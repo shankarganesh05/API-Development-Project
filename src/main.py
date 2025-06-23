@@ -2,13 +2,14 @@ from fastapi import FastAPI,status,Response,HTTPException,Depends
 from pydantic import BaseModel
 from typing import List
 from random import randrange
-from . import model,schemas
+from . import model,schemas,utils
 from .database import get_session,engine
 from sqlmodel import SQLModel,Session,select,update
 
 # Create FastAPI instance
 app = FastAPI()
 # Create the database tables
+
 SQLModel.metadata.create_all(engine)
 # Pydantic model for Post
 
@@ -61,4 +62,15 @@ def update_post(id: int, post: schemas.PostUpdate,db: Session = Depends(get_sess
     db.commit()
     db.refresh(upd_post)    
     return upd_post
-    
+@app.get("/users",response_model=List[schemas.UserResponse])
+def get_users(db: Session = Depends(get_session)):
+    users = db.exec(select(model.Users)).all()
+    return users
+@app.post("/signup",status_code=status.HTTP_201_CREATED,response_model=schemas.UserResponse)
+def create_user(user:schemas.UserCreate,db: Session = Depends(get_session)):
+    new_user = model.Users(**user.model_dump())
+    new_user.password = utils.hash(user.password)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
