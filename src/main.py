@@ -1,8 +1,8 @@
 from fastapi import FastAPI,status,Response,HTTPException,Depends
 from pydantic import BaseModel
 from . import model
-from .database import get_session,engine
-from sqlmodel import SQLModel,Session,select
+from .database import engine
+from sqlmodel import SQLModel
 from .routers import post,user
 
 # Create FastAPI instance
@@ -18,7 +18,3 @@ app.include_router(user.router)
 @app.get("/")
 def get_root():
     return {"message": "Welcome to the FastAPI Project!"}
-@app.get("/sqlmodel")
-def test_sqlmodel(db: Session = Depends(get_session)):
-    post = db.exec(select(model.Post)).all()
-    return {"message": post}
