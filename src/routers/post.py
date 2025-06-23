@@ -1,7 +1,7 @@
 from fastapi import FastAPI,status,Response,HTTPException,Depends,APIRouter
 from typing import List
 from ..database import get_session
-from .. import model,schemas
+from .. import model,schemas,outh2
 from sqlmodel import select,Session
 
 router = APIRouter(prefix="/posts",tags=['Posts'])
@@ -20,7 +20,8 @@ def get_post(id: int, db: Session = Depends(get_session)):
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id {id} does not exist")
 # Creating a new post 
 @router.post("/", status_code=status.HTTP_201_CREATED,response_model=schemas.PostResponse)
-def create_post(post: schemas.PostCreate,db: Session = Depends(get_session)):
+def create_post(post: schemas.PostCreate,db: Session = Depends(get_session),user_id:int=Depends(outh2.get_current_user)):
+    print(user_id)
     new_post = model.Post(**post.model_dump())
     db.add(new_post)
     db.commit()
@@ -28,7 +29,7 @@ def create_post(post: schemas.PostCreate,db: Session = Depends(get_session)):
     return new_post
 # Deleting a post by id
 @router.delete("/{id}",status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int,db: Session = Depends(get_session)):
+def delete_post(id: int,db: Session = Depends(get_session),user_id:int=Depends(outh2.get_current_user)):
     del_post = db.get(model.Post, id)
     if del_post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id {id} does not exist")
