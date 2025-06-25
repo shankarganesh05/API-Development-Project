@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from . import model
 from .database import engine
 from sqlmodel import SQLModel
-from .routers import post,user,auth
+from .routers import post,user,auth,vote
 
 # Create FastAPI instance
 app = FastAPI()
@@ -15,6 +15,7 @@ SQLModel.metadata.create_all(engine)
 app.include_router(post.router)
 app.include_router(user.router)
 app.include_router(auth.router)
+app.include_router(vote.router)
 # Root endpoint
 @app.get("/")
 def get_root():
