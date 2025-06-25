@@ -34,13 +34,13 @@ class PostResponse(Post):
     id : int
     user_id : int
     user : UserResponse
-    votes : int
+    
     class Config:
         from_attributes = True
    
 class Postout(BaseModel):
-    Posts: PostResponse
-    votes:int
+    Post: PostResponse
+    votes: int
     class Config:
         from_attributes = True
 class Token(BaseModel):
