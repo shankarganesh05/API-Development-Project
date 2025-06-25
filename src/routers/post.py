@@ -2,15 +2,34 @@ from fastapi import FastAPI,status,Response,HTTPException,Depends,APIRouter
 from typing import List
 from ..database import get_session
 from .. import model,schemas,outh2
-from sqlmodel import select,Session
+from sqlmodel import select,Session,func
 
 router = APIRouter(prefix="/posts",tags=['Posts'])
 
 # Getting all posts
-@router.get("/",response_model = List[schemas.PostResponse])
+@router.get("/",response_model = List[schemas.Postout])
+#@router.get("/")
 def get_posts(db: Session = Depends(get_session),current_user:int=Depends(outh2.get_current_user)):
     posts = db.exec(select(model.Post)).all()
-    return posts
+    result = db.exec(select(model.Post,func.count(model.Vote.post_id).label("Votes")).join(model.Vote,model.Post.id==model.Vote.post_id,isouter=True).group_by(model.Post.id)).all()
+    print(result)
+    
+    # Transform the tuples into PostResponse objects
+    posts_with_votes = []
+    for post, vote_count in result:
+        # Create PostResponse object with all required fields
+        post_response = schemas.PostResponse(
+            id=post.id,
+            title=post.title,
+            content=post.content,
+            published=post.published,
+            user_id=post.user_id,
+            user=post.user,  # This should be the related user object
+            votes=vote_count
+        )
+        posts_with_votes.append(post_response)
+    
+    return posts_with_votes
 # Getting a single post by id
 @router.get("/{id}",response_model=schemas.PostResponse)
 def get_post(id: int, db: Session = Depends(get_session),current_user:int=Depends(outh2.get_current_user)):

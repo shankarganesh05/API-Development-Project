@@ -1,5 +1,5 @@
 from pydantic import BaseModel,EmailStr
-from typing import Optional
+from typing import Optional,List
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -30,13 +30,19 @@ class PostUpdate(Post):
 class PostResponse(Post):
     title: str
     content: str
-    published: bool
+    published: bool = True
     id : int
     user_id : int
     user : UserResponse
+    votes : int
     class Config:
         from_attributes = True
-
+   
+class Postout(BaseModel):
+    Posts: PostResponse
+    votes:int
+    class Config:
+        from_attributes = True
 class Token(BaseModel):
     access_token:str
     token_type:str
