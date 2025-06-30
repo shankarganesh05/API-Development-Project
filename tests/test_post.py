@@ -5,7 +5,11 @@ def test_create_post(authorized_client):
     print(new_post)
     assert new_post['title'] == "Test Post"
     assert new_post['content'] == "This is a test post"
-def test_get_post(authorized_client):
+def test_get_post(authorized_client,post_data):
     res = authorized_client.get("/posts/")
+    assert res.status_code == 200
+    print(res.json())
+def test_get_postid(authorized_client, post_data):
+    res = authorized_client.get(f"/posts/{post_data['id']}")
     assert res.status_code == 200
     print(res.json())

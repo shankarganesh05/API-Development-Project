@@ -32,3 +32,8 @@ def token(client,test_user):
 def authorized_client(client,token):
     client.headers = {**client.headers,"Authorization": f"Bearer {token}"}
     return client
+@pytest.fixture()
+def post_data(authorized_client):
+    res = authorized_client.post("/posts/", json={"title": "Test Post for get", "content": "This is a test post"})
+    assert res.status_code == 201
+    return res.json()
